@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ปฏิกิริยาไฮเดรชันของคอนกรีต</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0F1C26;
+    --panel:#16283460;
+    --panel-solid:#172A38;
+    --line:#2A4152;
+    --grain:#8A93A0;
+    --grain-edge:#525C69;
+    --gel:#D8D1C1;
+    --water:#3FA7D6;
+    --heat:#F2A03D;
+    --strength:#4FC58B;
+    --text:#EAF0F4;
+    --muted:#93A6B4;
+    --display:'IBM Plex Sans Thai','Sarabun','Tahoma',sans-serif;
+    --body:'Sarabun','Tahoma',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:
+      radial-gradient(1200px 600px at 80% -10%, #1B3141 0%, transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--body);
+    line-height:1.5;
+    padding:clamp(16px,3vw,40px);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto}
+  header{margin-bottom:28px;border-bottom:1px solid var(--line);padding-bottom:20px}
+  .eyebrow{
+    font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.14em;
+    color:var(--water);text-transform:uppercase;margin-bottom:8px;
+  }
+  h1{
+    font-family:var(--display);font-weight:700;
+    font-size:clamp(26px,4vw,40px);line-height:1.15;letter-spacing:-.01em;
+  }
+  h1 .en{display:block;font-size:.5em;font-weight:500;color:var(--muted);letter-spacing:.02em;margin-top:6px}
+  .lede{color:var(--muted);max-width:60ch;margin-top:12px;font-size:16px}
+
+  .stage-grid{display:grid;grid-template-columns:1.15fr 1fr;gap:18px;margin-top:26px}
+  @media(max-width:860px){.stage-grid{grid-template-columns:1fr}}
+
+  .card{
+    background:var(--panel-solid);
+    border:1px solid var(--line);border-radius:16px;
+    padding:18px;position:relative;overflow:hidden;
+  }
+  .card h2{
+    font-family:var(--display);font-weight:600;font-size:15px;
+    letter-spacing:.02em;color:var(--muted);margin-bottom:14px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .card h2 .dot{width:8px;height:8px;border-radius:50%;background:var(--water)}
+
+  canvas{display:block;width:100%;border-radius:10px}
+  #mainCanvas{background:linear-gradient(180deg,#0C1922,#0A151D);aspect-ratio:1/0.78}
+  #graphCanvas{background:#0C1922;aspect-ratio:1/0.9}
+  #cureA,#cureB{background:linear-gradient(180deg,#0C1922,#0A151D);aspect-ratio:1/0.9}
+
+  /* stage caption */
+  .stage-caption{
+    margin-top:14px;background:#0E1D27;border:1px solid var(--line);
+    border-radius:10px;padding:14px 16px;min-height:96px;
+  }
+  .stage-caption .num{
+    font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:.1em;
+    color:var(--water);
+  }
+  .stage-caption .title{font-family:var(--display);font-weight:600;font-size:19px;margin:3px 0 6px}
+  .stage-caption .title .en{color:var(--muted);font-weight:500;font-size:14px;margin-left:6px}
+  .stage-caption .desc{color:var(--muted);font-size:14.5px}
+
+  /* controls */
+  .controls{display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap}
+  button.play{
+    font-family:var(--display);font-weight:600;font-size:15px;
+    background:var(--water);color:#06131B;border:none;border-radius:10px;
+    padding:10px 18px;cursor:pointer;display:flex;align-items:center;gap:8px;
+    transition:filter .15s,transform .05s;
+  }
+  button.play:hover{filter:brightness(1.08)}
+  button.play:active{transform:translateY(1px)}
+  button.ghost{
+    font-family:var(--body);font-size:14px;background:transparent;color:var(--muted);
+    border:1px solid var(--line);border-radius:9px;padding:9px 14px;cursor:pointer;
+    transition:color .15s,border-color .15s;
+  }
+  button.ghost:hover{color:var(--text);border-color:var(--muted)}
+  .scrub{flex:1;min-width:160px;display:flex;align-items:center;gap:10px}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:6px;
+    background:linear-gradient(90deg,var(--water) 0%,var(--water) var(--fill,0%),#22394A var(--fill,0%));cursor:pointer}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+    background:#EAF0F4;border:3px solid var(--water);box-shadow:0 1px 4px #0008}
+  input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#EAF0F4;border:3px solid var(--water)}
+  .tlabel{font-family:var(--display);font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted);white-space:nowrap;min-width:66px;text-align:right}
+
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;font-size:13.5px;color:var(--muted)}
+  .legend span{display:flex;align-items:center;gap:7px}
+  .swatch{width:14px;height:14px;border-radius:4px;flex:none}
+
+  /* curing section */
+  .cure-head{margin:38px 0 18px}
+  .cure-head h2{font-family:var(--display);font-weight:700;font-size:clamp(20px,3vw,26px)}
+  .cure-head p{color:var(--muted);max-width:64ch;margin-top:8px}
+  .cure-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:760px){.cure-grid{grid-template-columns:1fr}}
+  .cure-card{position:relative}
+  .cure-card.moist{border-color:#2E5C4A}
+  .cure-card.dry{border-color:#5C4630}
+  .tag{position:absolute;top:14px;right:14px;font-family:var(--display);font-weight:600;font-size:12px;
+    padding:4px 10px;border-radius:20px}
+  .tag.moist{background:#12352780;color:var(--strength);border:1px solid #2E5C4A}
+  .tag.dry{background:#3A2A1580;color:var(--heat);border:1px solid #5C4630}
+  .bar-wrap{margin-top:14px}
+  .bar-row{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);margin-top:6px}
+  .bar-track{flex:1;height:14px;background:#0E1D27;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+  .bar-fill{height:100%;width:0%;border-radius:8px;transition:width .1s linear}
+  .bar-fill.moist{background:linear-gradient(90deg,#3E9C74,var(--strength))}
+  .bar-fill.dry{background:linear-gradient(90deg,#C77E33,var(--heat))}
+  .bar-val{font-family:var(--display);font-variant-numeric:tabular-nums;font-weight:600;color:var(--text);min-width:42px;text-align:right}
+  .cure-note{
+    grid-column:1/-1;background:#0E1D27;border:1px solid var(--line);border-left:3px solid var(--water);
+    border-radius:10px;padding:16px 18px;color:var(--muted);font-size:15px;
+  }
+  .cure-note strong{color:var(--text);font-family:var(--display);font-weight:600}
+  .cure-controls{grid-column:1/-1;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:2px}
+
+  footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">02-292-101 · วัสดุก่อสร้างและเทคนิคการทำงาน 1</div>
+    <h1>คอนกรีตแข็งตัวได้อย่างไร?
+      <span class="en">ปฏิกิริยาไฮเดรชัน (Hydration) ของปูนซีเมนต์</span>
+    </h1>
+    <p class="lede">คอนกรีตไม่ได้ "แห้ง" แล้วแข็ง แต่ปูนซีเมนต์ทำ <b>ปฏิกิริยากับน้ำ</b> เกิดเป็นเจลที่เชื่อมเม็ดปูนเข้าด้วยกันจนกลายเป็นก้อนแข็ง กดเล่น แล้วดูกระบวนการทีละขั้น</p>
+  </header>
+
+  <div class="stage-grid">
+    <!-- LEFT: hydration animation -->
+    <div class="card">
+      <h2><span class="dot"></span>ภาพระดับเม็ดปูนซีเมนต์ในเนื้อคอนกรีต</h2>
+      <canvas id="mainCanvas"></canvas>
+
+      <div class="stage-caption">
+        <div class="num" id="capNum">ระยะที่ 1</div>
+        <div class="title" id="capTitle">ผสมน้ำ <span class="en" id="capEn">Mixing</span></div>
+        <div class="desc" id="capDesc">เม็ดปูนซีเมนต์ (สีเทา) ลอยอยู่ในน้ำ (สีฟ้า) เนื้อคอนกรีตยังเหลว เทและแต่งผิวได้</div>
+      </div>
+
+      <div class="controls">
+        <button class="play" id="playBtn"><span id="playIcon">▶</span><span id="playText">เล่น</span></button>
+        <div class="scrub">
+          <input type="range" id="scrub" min="0" max="1000" value="0">
+          <span class="tlabel" id="tlabel">ผสมน้ำ</span>
+        </div>
+        <button class="ghost" id="resetBtn">เริ่มใหม่</button>
+      </div>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--grain)"></i>เม็ดปูนซีเมนต์</span>
+        <span><i class="swatch" style="background:var(--water)"></i>น้ำ</span>
+        <span><i class="swatch" style="background:var(--gel)"></i>เจลยึดประสาน (C-S-H)</span>
+      </div>
+    </div>
+
+    <!-- RIGHT: graph -->
+    <div class="card">
+      <h2><span class="dot" style="background:var(--heat)"></span>เวลา · ความร้อน · กำลังอัด</h2>
+      <canvas id="graphCanvas"></canvas>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--heat)"></i>ความร้อนที่เกิดจากปฏิกิริยา</span>
+        <span><i class="swatch" style="background:var(--strength)"></i>กำลังอัดที่พัฒนาขึ้น</span>
+      </div>
+      <div class="stage-caption" style="min-height:auto">
+        <div class="desc">สังเกตว่าปฏิกิริยาปล่อย <b style="color:var(--heat)">ความร้อน</b> มากช่วงเริ่มก่อตัว แล้วค่อยๆ ลด ส่วน <b style="color:var(--strength)">กำลังอัด</b> จะเพิ่มขึ้นเรื่อยๆ และยังพัฒนาต่อได้อีกนานหลายวันถึงหลายสัปดาห์</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CURING COMPARISON -->
+  <div class="cure-head">
+    <h2>ทำไมต้อง "บ่มคอนกรีต"?</h2>
+    <p>ปฏิกิริยาไฮเดรชันต้องใช้น้ำต่อเนื่อง ถ้าผิวคอนกรีตแห้งเร็วเกินไป ปฏิกิริยาจะหยุด เจลยึดประสานสร้างไม่ครบ — กำลังอัดจึงค้างอยู่ต่ำ ลองกดเล่นเทียบสองก้อนพร้อมกัน</p>
+  </div>
+
+  <div class="cure-grid">
+    <div class="card cure-card moist">
+      <span class="tag moist">บ่มชื้น · มีน้ำต่อเนื่อง</span>
+      <h2><span class="dot" style="background:var(--strength)"></span>ก้อนที่บ่มถูกวิธี</h2>
+      <canvas id="cureA"></canvas>
+      <div class="bar-wrap">
+        <div class="bar-row"><span>กำลังอัด</span>
+          <div class="bar-track"><div class="bar-fill moist" id="barA"></div></div>
+          <span class="bar-val" id="valA">0%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card cure-card dry">
+      <span class="tag dry">ไม่บ่ม · ปล่อยให้แห้ง</span>
+      <h2><span class="dot" style="background:var(--heat)"></span>ก้อนที่ขาดน้ำ</h2>
+      <canvas id="cureB"></canvas>
+      <div class="bar-wrap">
+        <div class="bar-row"><span>กำลังอัด</span>
+          <div class="bar-track"><div class="bar-fill dry" id="barB"></div></div>
+          <span class="bar-val" id="valB">0%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cure-controls">
+      <button class="play" id="curePlay"><span id="cureIcon">▶</span><span id="cureText">เล่นเปรียบเทียบ</span></button>
+      <button class="ghost" id="cureReset">เริ่มใหม่</button>
+    </div>
+
+    <div class="cure-note">
+      <strong>ข้อสรุปสำหรับหน้างาน:</strong> คอนกรีตที่บ่มชื้น (ราดน้ำ คลุมพลาสติก หรือใช้น้ำยาบ่ม) มีน้ำให้ปฏิกิริยาเดินต่อ เจลยึดประสานเต็ม กำลังอัดสูง — ส่วนก้อนที่ปล่อยให้แห้งเร็ว เม็ดปูนหลายเม็ดยังไม่ทำปฏิกิริยา เชื่อมกันไม่ครบ กำลังอัดจึงต่ำและผิวมักแตกร้าว
+    </div>
+  </div>
+
+  <footer>สื่อการสอนประกอบรายวิชา · แบบจำลองเชิงแนวคิดเพื่อให้เห็นภาพกระบวนการ ไม่ใช่สเกลเชิงปริมาณจริง</footer>
+</div>
+
+<script>
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- shared helpers ---------- */
+function setupCanvas(cv){
+  const ctx = cv.getContext('2d');
+  function resize(){
+    const dpr = Math.min(window.devicePixelRatio||1, 2);
+    const r = cv.getBoundingClientRect();
+    cv.width = Math.round(r.width*dpr);
+    cv.height = Math.round(r.height*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    cv._w = r.width; cv._h = r.height;
+  }
+  return {ctx, resize};
+}
+const easeInOut = t => t<0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+
+/* physical curves as function of progress p (0..1) */
+function heatCurve(p){
+  const spike = 0.34*Math.exp(-Math.pow((p-0.045)/0.028,2));   // initial contact spike
+  const main  = 1.00*Math.exp(-Math.pow((p-0.34)/0.135,2));    // main hydration peak
+  return clamp(spike+main,0,1);
+}
+function strengthCurve(p){ return 1-Math.exp(-2.7*p); }        // keeps rising, ~0.93 at p=1
+
+/* map progress -> hydration degree (gel starts after mixing) */
+function hydration(p){
+  const start=0.12;
+  if(p<=start) return 0;
+  return easeInOut((p-start)/(1-start));
+}
+
+/* ---------- grain field generator ---------- */
+function makeGrains(w,h,count,seed){
+  let s=seed;
+  const rnd=()=>{s=(s*9301+49297)%233280;return s/233280;};
+  const pad=w*0.12, grains=[];
+  let tries=0;
+  while(grains.length<count && tries<3000){
+    tries++;
+    const r=lerp(w*0.028,w*0.058,rnd());
+    const x=lerp(pad,w-pad,rnd()), y=lerp(pad,h-pad,rnd());
+    let ok=true;
+    for(const g of grains){ if(Math.hypot(g.x-x,g.y-y) < (g.r0+r)*0.92){ok=false;break;} }
+    if(ok) grains.push({x,y,r0:r});
+  }
+  // precompute neighbour pairs
+  const pairs=[];
+  for(let i=0;i<grains.length;i++)for(let j=i+1;j<grains.length;j++){
+    const d=Math.hypot(grains[i].x-grains[j].x, grains[i].y-grains[j].y);
+    if(d < (grains[i].r0+grains[j].r0)*2.6) pairs.push({i,j,d});
+  }
+  return {grains,pairs};
+}
+
+/* draw the paste at hydration degree h (0..1) and water level wl (0..1) */
+function drawPaste(ctx,w,h_,field,hyd,waterLevel){
+  ctx.clearRect(0,0,w,h_);
+  // water background
+  if(waterLevel>0.01){
+    ctx.fillStyle=`rgba(63,167,214,${0.34*waterLevel})`;
+    ctx.fillRect(0,0,w,h_);
+    // a few droplets that shrink
+  }
+  const {grains,pairs}=field;
+  const gelExt = r=> r*(0.95*hyd);          // how far gel rim extends beyond core
+  // gel bridges first (behind grains)
+  ctx.lineCap='round';
+  for(const pr of pairs){
+    const a=grains[pr.i], b=grains[pr.j];
+    const reach=a.r0+gelExt(a.r0)+b.r0+gelExt(b.r0);
+    const overlap=(reach-pr.d);
+    if(overlap>0){
+      const strength=clamp(overlap/((a.r0+b.r0)*0.9),0,1);
+      ctx.strokeStyle=`rgba(216,209,193,${0.85*strength})`;
+      ctx.lineWidth=Math.min(a.r0,b.r0)*0.9*strength;
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+    }
+  }
+  // grains: gel rim + unhydrated core
+  for(const g of grains){
+    const gel=g.r0+gelExt(g.r0);
+    // gel rim
+    ctx.beginPath();ctx.arc(g.x,g.y,gel,0,7);
+    ctx.fillStyle=`rgba(216,209,193,${0.30+0.55*hyd})`;ctx.fill();
+    // core (shrinks as consumed)
+    const core=g.r0*(1-0.42*hyd);
+    const grd=ctx.createRadialGradient(g.x-core*0.3,g.y-core*0.3,core*0.2,g.x,g.y,core);
+    grd.addColorStop(0,'#9AA3AF');grd.addColorStop(1,'#525C69');
+    ctx.beginPath();ctx.arc(g.x,g.y,core,0,7);ctx.fillStyle=grd;ctx.fill();
+  }
+}
+
+/* ============ MAIN HYDRATION ANIM ============ */
+const mainCv=document.getElementById('mainCanvas');
+const M=setupCanvas(mainCv);
+let mField=null;
+function mResize(){M.resize();mField=makeGrains(mainCv._w,mainCv._h,20,12345);drawMain();}
+let mP=0, mPlaying=false, mLast=0;
+const capNum=document.getElementById('capNum'),capTitle=document.getElementById('capTitle'),
+      capEn=document.getElementById('capEn'),capDesc=document.getElementById('capDesc'),
+      tlabel=document.getElementById('tlabel'),scrub=document.getElementById('scrub');
+
+const stages=[
+  {upto:0.12,num:'ระยะที่ 1',t:'ผสมน้ำ',en:'Mixing',
+   d:'เม็ดปูนซีเมนต์ (สีเทา) ลอยอยู่ในน้ำ (สีฟ้า) เนื้อคอนกรีตยังเหลว เทและแต่งผิวได้',time:'ผสมน้ำ'},
+  {upto:0.40,num:'ระยะที่ 2',t:'เริ่มก่อตัว',en:'Setting',
+   d:'ผิวเม็ดปูนเริ่มทำปฏิกิริยากับน้ำ เกิดเจลยึดประสานเคลือบรอบเม็ด ปฏิกิริยาปล่อยความร้อนออกมามาก',time:'นาที – ชั่วโมง'},
+  {upto:0.72,num:'ระยะที่ 3',t:'ก่อตัวและแข็งตัว',en:'Hardening',
+   d:'เจลขยายจนเชื่อมเม็ดปูนเข้าด้วยกัน (เส้นสีครีม) น้ำถูกใช้ไป โครงสร้างเริ่มรับแรงได้',time:'ชั่วโมง – 1 วัน'},
+  {upto:1.01,num:'ระยะที่ 4',t:'พัฒนากำลังอัด',en:'Strength gain',
+   d:'เจลเติมเต็มช่องว่างจนแน่น เม็ดปูนยึดกันแข็งแรง กำลังอัดยังเพิ่มต่อได้อีกหลายวันถึงหลายสัปดาห์',time:'วัน – สัปดาห์'},
+];
+function currentStage(p){for(const s of stages)if(p<s.upto)return s;return stages[stages.length-1];}
+
+function drawMain(){
+  const w=mainCv._w,h=mainCv._h;
+  const hyd=hydration(mP);
+  const water=clamp(1-hyd*0.95,0,1);
+  drawPaste(M.ctx,w,h,mField,hyd,water);
+  // caption
+  const s=currentStage(mP);
+  capNum.textContent=s.num;capTitle.childNodes[0].textContent=s.t+' ';capEn.textContent=s.en;
+  capDesc.textContent=s.d;tlabel.textContent=s.time;
+  scrub.value=Math.round(mP*1000);
+  scrub.style.setProperty('--fill',(mP*100)+'%');
+  drawGraph();
+}
+
+/* ============ GRAPH ============ */
+const gCv=document.getElementById('graphCanvas');
+const G=setupCanvas(gCv);
+function gResize(){G.resize();drawGraph();}
+function drawGraph(){
+  const ctx=G.ctx,w=gCv._w,h=gCv._h;
+  ctx.clearRect(0,0,w,h);
+  const L=42,R=14,T=14,B=42;
+  const x0=L,x1=w-R,y0=h-B,y1=T;
+  // grid
+  ctx.strokeStyle='#1E3140';ctx.lineWidth=1;ctx.font="12px 'IBM Plex Sans Thai',sans-serif";
+  ctx.fillStyle='#6E8494';ctx.textAlign='center';ctx.textBaseline='top';
+  const tmarks=[[0,'ผสม'],[0.15,'นาที'],[0.4,'ชม.'],[0.72,'1 วัน'],[1,'28 วัน']];
+  for(const [tp,lab] of tmarks){
+    const x=lerp(x0,x1,tp);
+    ctx.beginPath();ctx.moveTo(x,y1);ctx.lineTo(x,y0);ctx.stroke();
+    ctx.fillText(lab,x,y0+6);
+  }
+  ctx.save();ctx.translate(12,(y0+y1)/2);ctx.rotate(-Math.PI/2);
+  ctx.textBaseline='middle';ctx.fillText('ระดับ (สัมพัทธ์)',0,0);ctx.restore();
+  // axis line
+  ctx.strokeStyle='#2A4152';ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y0);ctx.stroke();
+
+  const N=160;
+  function plot(fn,color,fill){
+    ctx.beginPath();
+    for(let i=0;i<=N;i++){const p=i/N;const x=lerp(x0,x1,p);const y=lerp(y0,y1,fn(p));i?ctx.lineTo(x,y):ctx.moveTo(x,y);}
+    if(fill){ctx.lineTo(x1,y0);ctx.lineTo(x0,y0);ctx.closePath();ctx.fillStyle=fill;ctx.fill();}
+    else{ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.stroke();}
+  }
+  plot(heatCurve,null,'rgba(242,160,61,0.12)');
+  plot(strengthCurve,null,'rgba(79,197,139,0.10)');
+  plot(heatCurve,'#F2A03D');
+  plot(strengthCurve,'#4FC58B');
+
+  // moving marker
+  const mx=lerp(x0,x1,mP);
+  ctx.strokeStyle='rgba(234,240,244,0.55)';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(mx,y1);ctx.lineTo(mx,y0);ctx.stroke();ctx.setLineDash([]);
+  // dots on curves
+  for(const [fn,c] of [[heatCurve,'#F2A03D'],[strengthCurve,'#4FC58B']]){
+    const y=lerp(y0,y1,fn(mP));
+    ctx.beginPath();ctx.arc(mx,y,5,0,7);ctx.fillStyle=c;ctx.fill();
+    ctx.strokeStyle='#0C1922';ctx.lineWidth=2;ctx.stroke();
+  }
+}
+
+/* ---- main loop ---- */
+function mLoop(ts){
+  if(mPlaying){
+    if(!mLast)mLast=ts;
+    const dt=(ts-mLast)/1000;mLast=ts;
+    mP+=dt/14;                      // ~14s full run
+    if(mP>=1){mP=1;setPlaying(false);}
+    drawMain();
+  }
+  requestAnimationFrame(mLoop);
+}
+const playBtn=document.getElementById('playBtn'),playIcon=document.getElementById('playIcon'),playText=document.getElementById('playText');
+function setPlaying(v){
+  mPlaying=v;mLast=0;
+  playIcon.textContent=v?'❚❚':'▶';
+  playText.textContent=v?'หยุด':(mP>=1?'เล่นอีกครั้ง':'เล่น');
+  if(v&&mP>=1)mP=0;
+}
+playBtn.onclick=()=>setPlaying(!mPlaying);
+document.getElementById('resetBtn').onclick=()=>{mP=0;setPlaying(false);drawMain();};
+scrub.oninput=()=>{setPlaying(false);mP=scrub.value/1000;drawMain();};
+
+/* ============ CURING COMPARISON ============ */
+const caCv=document.getElementById('cureA'),cbCv=document.getElementById('cureB');
+const CA=setupCanvas(caCv),CB=setupCanvas(cbCv);
+let caField=null,cbField=null;
+const barA=document.getElementById('barA'),barB=document.getElementById('barB'),
+      valA=document.getElementById('valA'),valB=document.getElementById('valB');
+let cP=0,cPlaying=false,cLast=0;
+const DRY_STOP=0.30;                 // dry specimen loses water here
+
+function cResize(){
+  CA.resize();CB.resize();
+  caField=makeGrains(caCv._w,caCv._h,16,777);
+  cbField=makeGrains(cbCv._w,cbCv._h,16,777);  // same seed => identical start
+  drawCure();
+}
+function drawCure(){
+  // moist: full hydration progresses with cP
+  const hydA=hydration(cP);
+  const waterA=clamp(1-hydA*0.95,0,1);
+  drawPaste(CA.ctx,caCv._w,caCv._h,caField,hydA,waterA);
+  // dry: hydration frozen after DRY_STOP; water drops to ~0 quickly after stop
+  const pB=Math.min(cP,DRY_STOP);
+  const hydB=hydration(pB);
+  let waterB=clamp(1-hydB*0.95,0,1);
+  if(cP>DRY_STOP) waterB=clamp(waterB*(1-(cP-DRY_STOP)/0.12),0,1); // dries out
+  drawPaste(CB.ctx,cbCv._w,cbCv._h,cbField,hydB,waterB);
+  // strength bars (relative to a common max)
+  const sA=strengthCurve(cP), sB=strengthCurve(pB);
+  const norm=strengthCurve(1);
+  const pctA=Math.round(sA/norm*100), pctB=Math.round(sB/norm*100);
+  barA.style.width=pctA+'%';valA.textContent=pctA+'%';
+  barB.style.width=pctB+'%';valB.textContent=pctB+'%';
+}
+function cLoop(ts){
+  if(cPlaying){
+    if(!cLast)cLast=ts;const dt=(ts-cLast)/1000;cLast=ts;
+    cP+=dt/12;
+    if(cP>=1){cP=1;setCure(false);}
+    drawCure();
+  }
+  requestAnimationFrame(cLoop);
+}
+const cureIcon=document.getElementById('cureIcon'),cureText=document.getElementById('cureText');
+function setCure(v){
+  cPlaying=v;cLast=0;
+  cureIcon.textContent=v?'❚❚':'▶';
+  cureText.textContent=v?'หยุด':(cP>=1?'เล่นอีกครั้ง':'เล่นเปรียบเทียบ');
+  if(v&&cP>=1)cP=0;
+}
+document.getElementById('curePlay').onclick=()=>setCure(!cPlaying);
+document.getElementById('cureReset').onclick=()=>{cP=0;setCure(false);drawCure();};
+
+/* ---- init ---- */
+function initAll(){mResize();gResize();cResize();}
+window.addEventListener('resize',()=>{mResize();gResize();cResize();});
+window.addEventListener('load',()=>{
+  initAll();
+  requestAnimationFrame(mLoop);
+  requestAnimationFrame(cLoop);
+  if(!reduceMotion){ setTimeout(()=>setPlaying(true),600); }
+});
+// draw immediately in case load already fired
+initAll();
+</script>
+</body>
+</html>

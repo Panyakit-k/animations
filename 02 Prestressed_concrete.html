@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คอนกรีตอัดแรง: ดึงก่อน vs ดึงทีหลัง</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0F1C26;--panel:#172A38;--line:#2A4152;
+    --concrete:#8A93A0;--concrete-edge:#525C69;
+    --steel:#9AA3AF;--tension:#F2A03D;--comp:#4FC58B;--duct:#6FB7E8;
+    --text:#EAF0F4;--muted:#93A6B4;
+    --display:'IBM Plex Sans Thai','Sarabun','Tahoma',sans-serif;
+    --body:'Sarabun','Tahoma',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:radial-gradient(1200px 600px at 80% -10%,#1B3141 0%,transparent 60%),var(--bg);
+    color:var(--text);font-family:var(--body);line-height:1.5;padding:clamp(16px,3vw,40px);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto}
+  header{margin-bottom:24px;border-bottom:1px solid var(--line);padding-bottom:20px}
+  .eyebrow{font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.14em;color:var(--duct);text-transform:uppercase;margin-bottom:8px}
+  h1{font-family:var(--display);font-weight:700;font-size:clamp(24px,3.6vw,38px);line-height:1.15;letter-spacing:-.01em}
+  h1 .en{display:block;font-size:.5em;font-weight:500;color:var(--muted);margin-top:6px}
+  .lede{color:var(--muted);max-width:66ch;margin-top:12px;font-size:16px}
+
+  .globalbar{display:flex;align-items:center;gap:12px;margin:22px 0 18px;flex-wrap:wrap}
+  button.play{font-family:var(--display);font-weight:600;font-size:15px;background:var(--duct);color:#06131B;border:none;border-radius:10px;padding:10px 18px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:filter .15s,transform .05s}
+  button.play:hover{filter:brightness(1.08)}button.play:active{transform:translateY(1px)}
+  button.ghost{font-family:var(--body);font-size:14px;background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:9px;padding:9px 14px;cursor:pointer;transition:.15s}
+  button.ghost:hover{color:var(--text);border-color:var(--muted)}
+  .scrub{flex:1;min-width:180px;display:flex;align-items:center;gap:10px}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:6px;background:linear-gradient(90deg,var(--duct) 0%,var(--duct) var(--fill,0%),#22394A var(--fill,0%));cursor:pointer}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#EAF0F4;border:3px solid var(--duct);box-shadow:0 1px 4px #0008}
+  input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#EAF0F4;border:3px solid var(--duct)}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:840px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;overflow:hidden}
+  .card.pre{border-top:3px solid var(--tension)}
+  .card.post{border-top:3px solid var(--duct)}
+  .card h2{font-family:var(--display);font-weight:700;font-size:19px;margin-bottom:3px;display:flex;align-items:center;gap:9px}
+  .card h2 .dot{width:10px;height:10px;border-radius:50%}
+  .card .sub{color:var(--muted);font-size:13.5px;margin-bottom:14px;font-family:var(--display);letter-spacing:.02em}
+  canvas{display:block;width:100%;border-radius:10px;background:linear-gradient(180deg,#0C1922,#0A151D);aspect-ratio:1/0.6}
+
+  .steps{display:flex;gap:6px;margin-top:14px}
+  .step{flex:1;text-align:center;font-family:var(--display);font-size:12px;color:var(--muted);border-top:2px solid #22394A;padding-top:8px;transition:.2s}
+  .card.pre .step.active{border-top-color:var(--tension);color:var(--text)}
+  .card.post .step.active{border-top-color:var(--duct);color:var(--text)}
+
+  .caption{margin-top:12px;background:#0E1D27;border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-height:96px}
+  .caption .num{font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:.08em}
+  .card.pre .caption .num{color:var(--tension)}
+  .card.post .caption .num{color:var(--duct)}
+  .caption .ttl{font-family:var(--display);font-weight:600;font-size:17px;margin:3px 0 5px}
+  .caption .desc{color:var(--muted);font-size:14px}
+
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:20px;font-size:13.5px;color:var(--muted);justify-content:center}
+  .legend span{display:flex;align-items:center;gap:7px}
+  .swatch{width:14px;height:14px;border-radius:4px;flex:none}
+  .swatch.line{height:5px;border-radius:3px;width:20px}
+
+  .cmp{margin-top:34px}
+  .cmp h3{font-family:var(--display);font-weight:700;font-size:clamp(19px,2.6vw,24px);margin-bottom:14px}
+  table{width:100%;border-collapse:collapse;font-size:14.5px;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  th,td{padding:12px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+  thead th{font-family:var(--display);font-weight:600;background:#0E1D27}
+  thead th.pre{color:var(--tension)}thead th.post{color:var(--duct)}
+  th.rowh{font-family:var(--display);font-weight:600;color:var(--muted);width:22%;white-space:nowrap}
+  tbody tr:last-child td,tbody tr:last-child th{border-bottom:none}
+  td{color:var(--muted)}
+  @media(max-width:620px){table,thead,tbody,th,td,tr{display:block}thead{display:none}
+    td,th.rowh{border:none;padding:6px 14px}tr{border-bottom:1px solid var(--line);padding:10px 0}
+    td::before{content:attr(data-l);display:block;font-family:var(--display);font-size:11px;color:#5f7787;text-transform:uppercase;letter-spacing:.06em}}
+
+  .note{margin-top:22px;background:#0E1D27;border:1px solid var(--line);border-left:3px solid var(--comp);border-radius:10px;padding:16px 18px;color:var(--muted);font-size:15px}
+  .note strong{color:var(--text);font-family:var(--display);font-weight:600}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">02-292-101 · คอนกรีตอัดแรง (Prestressed Concrete)</div>
+    <h1>ดึงลวดก่อน หรือ ดึงลวดทีหลัง?
+      <span class="en">Pre-tensioned vs Post-tensioned Concrete</span>
+    </h1>
+    <p class="lede">คอนกรีตรับแรงดึงได้น้อย จึงใส่ "แรงอัด" เข้าไปก่อนด้วยลวดเหล็กกำลังสูง ทั้งสองวิธีให้ผลเหมือนกัน แต่ต่างกันที่ <b>ลำดับการทำงาน</b> และ <b>วิธีถ่ายแรงเข้าสู่คอนกรีต</b> กดเล่นเพื่อดูทั้งสองพร้อมกัน</p>
+  </header>
+
+  <div class="globalbar">
+    <button class="play" id="playBtn"><span id="playIcon">▶</span><span id="playText">เล่นทั้งสอง</span></button>
+    <button class="ghost" id="prevBtn">‹ ขั้นก่อน</button>
+    <button class="ghost" id="nextBtn">ขั้นถัดไป ›</button>
+    <div class="scrub"><input type="range" id="scrub" min="0" max="1000" value="0"></div>
+    <button class="ghost" id="resetBtn">เริ่มใหม่</button>
+  </div>
+
+  <div class="grid">
+    <div class="card pre">
+      <h2><span class="dot" style="background:var(--tension)"></span>แบบดึงก่อน</h2>
+      <div class="sub">Pre-tensioned · ดึงลวด → แล้วจึงเทคอนกรีต</div>
+      <canvas id="preCv"></canvas>
+      <div class="steps" id="preSteps">
+        <div class="step">1 ดึงลวด</div>
+        <div class="step">2 เทคอนกรีต</div>
+        <div class="step">3 บ่ม</div>
+        <div class="step">4 ตัดลวด</div>
+      </div>
+      <div class="caption">
+        <div class="num" id="preNum">ขั้นที่ 1</div>
+        <div class="ttl" id="preTtl">ดึงลวดอัดแรง</div>
+        <div class="desc" id="preDesc">ขึงลวดเหล็กกำลังสูงระหว่างหัวยึดสองด้าน แล้วใช้แม่แรงดึงจนตึง (ลวดอยู่ในสภาพรับแรงดึง)</div>
+      </div>
+    </div>
+
+    <div class="card post">
+      <h2><span class="dot" style="background:var(--duct)"></span>แบบดึงทีหลัง</h2>
+      <div class="sub">Post-tensioned · เทคอนกรีต → แล้วจึงดึงลวด</div>
+      <canvas id="postCv"></canvas>
+      <div class="steps" id="postSteps">
+        <div class="step">1 หล่อฝังท่อ</div>
+        <div class="step">2 บ่ม</div>
+        <div class="step">3 ดึง+ยึดสมอ</div>
+        <div class="step">4 อัดน้ำปูน</div>
+      </div>
+      <div class="caption">
+        <div class="num" id="postNum">ขั้นที่ 1</div>
+        <div class="ttl" id="postTtl">หล่อคอนกรีตพร้อมฝังท่อร้อยลวด</div>
+        <div class="desc" id="postDesc">เทคอนกรีตโดยฝังท่อ (duct) ไว้ตามแนวโค้งที่ออกแบบ ลวดอยู่ในท่อแต่ยังไม่ดึง</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><i class="swatch" style="background:var(--concrete)"></i>คอนกรีต</span>
+    <span><i class="swatch line" style="background:var(--steel)"></i>ลวดยังไม่ดึง</span>
+    <span><i class="swatch line" style="background:var(--tension)"></i>ลวดรับแรงดึง</span>
+    <span><i class="swatch" style="background:var(--comp)"></i>แรงอัดในคอนกรีต</span>
+    <span><i class="swatch line" style="background:var(--duct)"></i>ท่อร้อยลวด / น้ำปูน</span>
+  </div>
+
+  <div class="cmp">
+    <h3>ตารางเปรียบเทียบ</h3>
+    <table>
+      <thead><tr><th class="rowh">หัวข้อ</th><th class="pre">แบบดึงก่อน (Pre-tension)</th><th class="post">แบบดึงทีหลัง (Post-tension)</th></tr></thead>
+      <tbody>
+        <tr><th class="rowh">ลำดับการทำงาน</th>
+          <td data-l="Pre-tension">ดึงลวดให้ตึงก่อน แล้วจึงเทคอนกรีตหุ้ม</td>
+          <td data-l="Post-tension">เทคอนกรีตและบ่มให้แข็งก่อน แล้วจึงดึงลวด</td></tr>
+        <tr><th class="rowh">การถ่ายแรงเข้าคอนกรีต</th>
+          <td data-l="Pre-tension">ผ่าน <b>แรงยึดเหนี่ยว</b> (bond) ระหว่างลวดกับคอนกรีตตลอดความยาว</td>
+          <td data-l="Post-tension">ผ่าน <b>หัวยึด/สมอ</b> (anchorage) ที่ปลายทั้งสองด้าน</td></tr>
+        <tr><th class="rowh">แนวลวด</th>
+          <td data-l="Pre-tension">มักเป็นเส้นตรง</td>
+          <td data-l="Post-tension">ดัดโค้งตามแนวโมเมนต์ได้ (draped)</td></tr>
+        <tr><th class="rowh">ท่อร้อยลวด</th>
+          <td data-l="Pre-tension">ไม่มี — ลวดสัมผัสคอนกรีตโดยตรง</td>
+          <td data-l="Post-tension">มีท่อ แล้วอัดน้ำปูน (grout) ภายหลัง</td></tr>
+        <tr><th class="rowh">สถานที่ผลิต</th>
+          <td data-l="Pre-tension">โรงงานหล่อสำเร็จ (แท่นดึงยาว long-line bed)</td>
+          <td data-l="Post-tension">หน้างานหรือโรงงานก็ได้</td></tr>
+        <tr><th class="rowh">ตัวอย่างการใช้งาน</th>
+          <td data-l="Pre-tension">แผ่นพื้นสำเร็จรูป เสาเข็ม คานสะพานช่วงสั้น–กลาง</td>
+          <td data-l="Post-tension">พื้นไร้คานช่วงกว้าง คานสะพานช่วงยาว ถังเก็บน้ำ</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note"><strong>จุดที่ต้องจำ:</strong> ทั้งสองวิธีทำให้คอนกรีต "ถูกอัด" ไว้ล่วงหน้า (สังเกตคานโก่งตัวขึ้นเล็กน้อย = camber และลูกศรแรงอัดสีเขียว) เพื่อให้พอรับน้ำหนักใช้งานแล้วคอนกรีตยังไม่เกิดแรงดึงจนแตกร้าว ต่างกันแค่ทำ "ก่อน" หรือ "หลัง" เทคอนกรีต และถ่ายแรงด้วย "แรงยึดเหนี่ยว" หรือ "หัวสมอ"</div>
+
+  <footer>สื่อการสอนประกอบรายวิชา · แบบจำลองเชิงแนวคิด เน้นให้เห็นลำดับกระบวนการ ไม่ใช่สัดส่วนเชิงวิศวกรรมจริง</footer>
+</div>
+
+<script>
+const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const smooth=t=>t<0?0:t>1?1:t*t*(3-2*t);
+const seg=(p,a,b)=>clamp((p-a)/(b-a),0,1);
+
+function setup(cv){const ctx=cv.getContext('2d');
+  function resize(){const dpr=Math.min(window.devicePixelRatio||1,2);const r=cv.getBoundingClientRect();
+    cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);cv._w=r.width;cv._h=r.height;}
+  return{ctx,resize};}
+
+function beamGeo(w,h){const mx=w*0.14,xL=mx,xR=w-mx,cy=h*0.52,bh=h*0.30;return{xL,xR,cy,bh,span:xR-xL};}
+function camberY(g,x,camber){const u=(x-g.xL)/g.span;const s=4*u*(1-u);return -camber*s;}
+function beamPath(ctx,g,camber){const steps=26;ctx.beginPath();
+  for(let i=0;i<=steps;i++){const x=lerp(g.xL,g.xR,i/steps);const y=g.cy+camberY(g,x,camber)-g.bh/2;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}
+  for(let i=steps;i>=0;i--){const x=lerp(g.xL,g.xR,i/steps);const y=g.cy+camberY(g,x,camber)+g.bh/2;ctx.lineTo(x,y);}
+  ctx.closePath();}
+function drawConcrete(ctx,g,camber,alpha){if(alpha<=0.01)return;ctx.save();beamPath(ctx,g,camber);
+  const grd=ctx.createLinearGradient(0,g.cy-g.bh,0,g.cy+g.bh);grd.addColorStop(0,'#9AA3AF');grd.addColorStop(1,'#6B7481');
+  ctx.globalAlpha=alpha;ctx.fillStyle=grd;ctx.fill();ctx.globalAlpha=alpha;ctx.lineWidth=2;ctx.strokeStyle='#454E5A';ctx.stroke();ctx.restore();}
+function tendonYAt(g,x,profile,camber){const u=(x-g.xL)/g.span;let off;
+  if(profile==='straight')off=g.bh*0.26;else off=lerp(-g.bh*0.30,g.bh*0.32,4*u*(1-u));
+  return g.cy+camberY(g,x,camber)+off;}
+function drawTendon(ctx,g,profile,tension,camber,opts={}){const steps=30;
+  const col=tension>0.02?`rgba(${lerp(154,242,tension)|0},${lerp(163,160,tension)|0},${lerp(175,61,tension)|0},1)`:'rgba(154,163,175,1)';
+  if(opts.duct){ctx.beginPath();for(let i=0;i<=steps;i++){const x=lerp(g.xL,g.xR,i/steps);const y=tendonYAt(g,x,profile,camber);i?ctx.lineTo(x,y):ctx.moveTo(x,y);}
+    ctx.lineWidth=9;ctx.strokeStyle='rgba(111,183,232,0.28)';ctx.lineCap='round';ctx.stroke();
+    if(opts.grout>0){ctx.lineWidth=9;ctx.strokeStyle=`rgba(111,183,232,${0.55*opts.grout})`;ctx.stroke();}}
+  ctx.beginPath();for(let i=0;i<=steps;i++){const x=lerp(g.xL,g.xR,i/steps);const y=tendonYAt(g,x,profile,camber);i?ctx.lineTo(x,y):ctx.moveTo(x,y);}
+  ctx.lineWidth=3.2;ctx.strokeStyle=col;ctx.lineCap='round';ctx.stroke();}
+function anchorBlocks(ctx,g,profile,camber,alpha){if(alpha<=0.01)return;ctx.globalAlpha=alpha;ctx.fillStyle='#C7CDD4';
+  for(const x of[g.xL,g.xR]){const y=tendonYAt(g,x,profile,camber);ctx.fillRect(x-4,y-9,8,18);}ctx.globalAlpha=1;}
+function jack(ctx,g,side,profile,camber,extend,alpha){if(alpha<=0.01)return;ctx.globalAlpha=alpha;
+  const x=side==='R'?g.xR:g.xL;const dir=side==='R'?1:-1;const y=tendonYAt(g,x,profile,camber);const bx=x+dir*(16+extend*10);
+  ctx.fillStyle='#3E5566';ctx.fillRect(bx-11,y-13,22,26);ctx.strokeStyle='#6FB7E8';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(bx,y);ctx.stroke();ctx.globalAlpha=1;}
+function compArrows(ctx,g,camber,strength){if(strength<=0.02)return;ctx.save();ctx.globalAlpha=strength;
+  const y=g.cy;const len=26*strength;
+  function arrow(x,dir){const tip=x+dir*6;ctx.strokeStyle='#4FC58B';ctx.fillStyle='#4FC58B';ctx.lineWidth=4;
+    ctx.beginPath();ctx.moveTo(x+dir*(6+len),y);ctx.lineTo(tip,y);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(tip,y);ctx.lineTo(tip+dir*9,y-6);ctx.lineTo(tip+dir*9,y+6);ctx.closePath();ctx.fill();}
+  arrow(g.xL,1);arrow(g.xR,-1);ctx.restore();}
+function label(ctx,x,y,txt,color){ctx.font="600 12px 'IBM Plex Sans Thai',sans-serif";ctx.fillStyle=color||'#93A6B4';
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,x,y);}
+function cutMark(ctx,g,profile,camber,t){if(t<=0.02)return;ctx.save();ctx.globalAlpha=t;
+  for(const[x,dir]of[[g.xL,-1],[g.xR,1]]){const y=tendonYAt(g,x,profile,camber);ctx.strokeStyle='#F2A03D';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(x+dir*3,y-7);ctx.lineTo(x+dir*11,y+7);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x+dir*3,y+7);ctx.lineTo(x+dir*11,y-7);ctx.stroke();}ctx.restore();}
+
+const preCv=document.getElementById('preCv');const PRE=setup(preCv);
+function renderPre(p){const ctx=PRE.ctx,w=preCv._w,h=preCv._h;ctx.clearRect(0,0,w,h);const g=beamGeo(w,h);
+  const s1=seg(p,0,0.28),s2=seg(p,0.28,0.55),s4=seg(p,0.72,1);
+  const tension=p<0.72?smooth(s1):1;const concreteA=smooth(s2);const camber=smooth(s4)*g.bh*0.34;const comp=smooth(s4);
+  const frame=p<0.78?1:1-smooth(seg(p,0.78,0.92));
+  ctx.globalAlpha=frame*0.9;ctx.fillStyle='#2B3B49';
+  ctx.fillRect(g.xL-16,g.cy-g.bh*0.9,10,g.bh*1.8);ctx.fillRect(g.xR+6,g.cy-g.bh*0.9,10,g.bh*1.8);ctx.globalAlpha=1;
+  drawConcrete(ctx,g,camber,concreteA);
+  drawTendon(ctx,g,'straight',tension,camber);
+  if(p<0.30)jack(ctx,g,'R','straight',camber,smooth(s1),1-smooth(seg(p,0.24,0.30)));
+  if(p<0.72)label(ctx,(g.xL+g.xR)/2,tendonYAt(g,(g.xL+g.xR)/2,'straight',camber)+16,'ลวดรับแรงดึง','#F2A03D');
+  if(p>=0.55&&p<0.72)label(ctx,(g.xL+g.xR)/2,g.cy-g.bh*0.9,'บ่มจนคอนกรีตแข็งและยึดกับลวด','#93A6B4');
+  cutMark(ctx,g,'straight',camber,smooth(seg(p,0.72,0.86)));
+  compArrows(ctx,g,camber,comp);
+  if(comp>0.4)label(ctx,(g.xL+g.xR)/2,g.cy+g.bh*0.9,'คอนกรีตถูกอัด · คานโก่งขึ้น (camber)','#4FC58B');}
+
+const postCv=document.getElementById('postCv');const POST=setup(postCv);
+function renderPost(p){const ctx=POST.ctx,w=postCv._w,h=postCv._h;ctx.clearRect(0,0,w,h);const g=beamGeo(w,h);
+  const s1=seg(p,0,0.30),s3=seg(p,0.50,0.80),s4=seg(p,0.80,1);
+  const concreteA=smooth(s1);const tension=smooth(s3);const camber=smooth(s3)*g.bh*0.34;const comp=smooth(seg(p,0.50,0.80));const grout=smooth(s4);
+  drawConcrete(ctx,g,camber,concreteA);
+  drawTendon(ctx,g,'drape',tension,camber,{duct:true,grout});
+  if(p>=0.30&&p<0.50)label(ctx,(g.xL+g.xR)/2,g.cy-g.bh*0.95,'บ่มจนคอนกรีตแข็งแรงพอ','#93A6B4');
+  if(p>=0.50&&p<0.80)jack(ctx,g,'R','drape',camber,smooth(s3),1);
+  anchorBlocks(ctx,g,'drape',camber,smooth(seg(p,0.66,0.82)));
+  if(p>=0.66&&p<0.86)label(ctx,g.xR-2,tendonYAt(g,g.xR,'drape',camber)-20,'หัวสมอ','#EAF0F4');
+  if(grout>0.2)label(ctx,(g.xL+g.xR)/2,g.cy+g.bh*0.95,'อัดน้ำปูนในท่อ (grout)','#6FB7E8');
+  compArrows(ctx,g,camber,comp);
+  if(comp>0.5&&p<0.82)label(ctx,(g.xL+g.xR)/2,g.cy+g.bh*0.62,'คอนกรีตถูกอัด · คานโก่งขึ้น','#4FC58B');
+  if(tension>0.3&&p<0.80)label(ctx,g.xL+g.span*0.28,tendonYAt(g,g.xL+g.span*0.28,'drape',camber)-14,'ดึงลวด','#F2A03D');}
+
+const preStages=[
+  [0.28,'ขั้นที่ 1','ดึงลวดอัดแรง','ขึงลวดเหล็กกำลังสูงระหว่างหัวยึดสองด้าน ใช้แม่แรงดึงจนตึง ลวดอยู่ในสภาพรับแรงดึง'],
+  [0.55,'ขั้นที่ 2','เทคอนกรีต','เทคอนกรีตหุ้มลวดที่กำลังตึงอยู่ (ลวดยังถูกดึงค้างไว้ด้วยหัวยึด)'],
+  [0.72,'ขั้นที่ 3','บ่มคอนกรีต','บ่มจนคอนกรีตแข็งแรงพอ และเกิดแรงยึดเหนี่ยว (bond) ระหว่างลวดกับคอนกรีตตลอดความยาว'],
+  [1.01,'ขั้นที่ 4','ตัดลวด (ถ่ายแรง)','ตัดลวดที่ปลาย ลวดหดตัวถ่ายแรงอัดเข้าคอนกรีตผ่านแรงยึดเหนี่ยว คานถูกอัดและโก่งขึ้นเล็กน้อย'],
+];
+const postStages=[
+  [0.30,'ขั้นที่ 1','หล่อคอนกรีตพร้อมฝังท่อร้อยลวด','เทคอนกรีตโดยฝังท่อ (duct) ตามแนวโค้งที่ออกแบบ ลวดอยู่ในท่อแต่ยังไม่ดึง'],
+  [0.50,'ขั้นที่ 2','บ่มคอนกรีต','บ่มจนคอนกรีตแข็งแรงพอที่จะรับแรงอัดจากการดึงลวดได้'],
+  [0.80,'ขั้นที่ 3','ดึงลวดและยึดหัวสมอ','ใช้แม่แรงดึงลวดโดยยันกับคอนกรีตที่แข็งแล้ว จากนั้นล็อกด้วยหัวสมอ (anchorage) ที่ปลาย'],
+  [1.01,'ขั้นที่ 4','อัดน้ำปูนในท่อ','อัดน้ำปูน (grout) เข้าท่อเพื่อป้องกันสนิมและเสริมแรงยึดเหนี่ยว งานเสร็จสมบูรณ์'],
+];
+function idxOf(stages,p){for(let i=0;i<stages.length;i++)if(p<stages[i][0])return i;return stages.length-1;}
+function applyCaption(prefix,stages,p,stepsEl){const i=idxOf(stages,p);const s=stages[i];
+  document.getElementById(prefix+'Num').textContent=s[1];
+  document.getElementById(prefix+'Ttl').textContent=s[2];
+  document.getElementById(prefix+'Desc').textContent=s[3];
+  [...stepsEl.children].forEach((el,k)=>el.classList.toggle('active',k===i));}
+
+let P=0,playing=false,last=0;
+const scrub=document.getElementById('scrub');
+const preStepsEl=document.getElementById('preSteps'),postStepsEl=document.getElementById('postSteps');
+function draw(){renderPre(P);renderPost(P);applyCaption('pre',preStages,P,preStepsEl);applyCaption('post',postStages,P,postStepsEl);
+  scrub.value=Math.round(P*1000);scrub.style.setProperty('--fill',(P*100)+'%');}
+function resizeAll(){PRE.resize();POST.resize();draw();}
+function loop(ts){if(playing){if(!last)last=ts;const dt=(ts-last)/1000;last=ts;P+=dt/13;if(P>=1){P=1;setPlaying(false);}draw();}requestAnimationFrame(loop);}
+const playIcon=document.getElementById('playIcon'),playText=document.getElementById('playText');
+function setPlaying(v){playing=v;last=0;playIcon.textContent=v?'❚❚':'▶';playText.textContent=v?'หยุด':(P>=1?'เล่นอีกครั้ง':'เล่นทั้งสอง');if(v&&P>=1)P=0;}
+document.getElementById('playBtn').onclick=()=>setPlaying(!playing);
+document.getElementById('resetBtn').onclick=()=>{P=0;setPlaying(false);draw();};
+scrub.oninput=()=>{setPlaying(false);P=scrub.value/1000;draw();};
+const stops=[0,0.28,0.30,0.50,0.55,0.72,0.80,1];
+document.getElementById('nextBtn').onclick=()=>{setPlaying(false);P=stops.find(s=>s>P+0.001)??1;draw();};
+document.getElementById('prevBtn').onclick=()=>{setPlaying(false);const r=[...stops].reverse().find(s=>s<P-0.001)??0;P=r;draw();};
+
+function init(){resizeAll();}
+window.addEventListener('resize',resizeAll);
+window.addEventListener('load',()=>{init();requestAnimationFrame(loop);if(!reduceMotion)setTimeout(()=>setPlaying(true),700);});
+init();
+</script>
+</body>
+</html>
